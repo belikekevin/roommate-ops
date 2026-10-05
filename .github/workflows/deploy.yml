@@ -1,0 +1,28 @@
+# Manual deploy to Fly.io: Actions -> Deploy -> Run workflow.
+# Needs the repo secret FLY_API_TOKEN: `fly tokens create deploy -a <your-app>`.
+# The app name comes from fly.toml. App secrets (DATABASE_URL, ...) are set once with `fly secrets set`.
+name: Deploy
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: fly-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm test
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      # One Machine only: the scheduler runs in-process and must not run twice.
+      - run: flyctl deploy --remote-only --ha=false
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

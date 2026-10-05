@@ -1,0 +1,10 @@
+# Never ship local secrets or build output into the image; secrets come from `fly secrets`.
+.env
+.env.*
+!.env.example
+node_modules
+.next
+.git
+.github
+*.tsbuildinfo
+next-env.d.ts
